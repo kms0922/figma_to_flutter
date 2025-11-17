@@ -1,7 +1,9 @@
+// [lib/screens/main_feed_screen.dart]
+
 import 'package:flutter/material.dart';
 import 'package:figma_to_flutter/data/data_source/remote/board_api.dart';
 import 'package:figma_to_flutter/data/model/board_model.dart';
-import 'package:figma_to_flutter/screens/post_list_screen.dart'; 
+import 'package:figma_to_flutter/screens/post_list_screen.dart'; // 새로 만들 PostListScreen
 
 class MainFeedScreen extends StatefulWidget {
   const MainFeedScreen({super.key});
@@ -13,14 +15,12 @@ class MainFeedScreen extends StatefulWidget {
 class _MainFeedScreenState extends State<MainFeedScreen> {
   int _selectedIndex = 0;
 
-  // BoardApi 및 Future 변수 선언 (http 사용)
   late final BoardApi _boardApi;
   late Future<List<BoardModel>> _boardsFuture;
 
   @override
   void initState() {
     super.initState();
-    // initState에서 BoardApi 인스턴스 생성 및 API 호출
     _boardApi = BoardApi();
     _boardsFuture = _boardApi.getBoards();
   }
@@ -48,7 +48,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
             onPressed: () {},
             icon: const Icon(Icons.search),
           ),
-          // '새 글 작성' 아이콘은 PostListScreen으로 이동했으므로 여기서는 제거
+          // '새 글 작성' 아이콘은 PostListScreen으로 이동
         ],
       ),
       // body를 FutureBuilder로 변경
@@ -59,9 +59,17 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          // 에러 발생 시
+          // 에러 발생 시 (수정된 board_api.dart의 상세 오류가 표시됨)
           if (snapshot.hasError) {
-            return Center(child: Text('오류가 발생했습니다: ${snapshot.error}'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(
+                  snapshot.error.toString(),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
           }
           // 데이터가 없을 때
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
