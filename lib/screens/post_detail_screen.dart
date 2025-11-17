@@ -1,18 +1,22 @@
-// [lib/screens/post_detail_screen.dart]
-
+import 'package:figma_to_flutter/data/model/post_model.dart';
 import 'package:flutter/material.dart';
 
 class PostDetailScreen extends StatelessWidget {
-  const PostDetailScreen({super.key});
+  // PostModel 객체를 생성자를 통해 받음
+  final PostModel post;
 
-  // 태그 UI를 만드는 헬퍼(helper) 함수
+  const PostDetailScreen({
+    super.key,
+    required this.post,
+  });
+
+  // 태그 UI (API에 없으므로 임시로 헬퍼 함수만 남겨둠)
   Widget _buildTagChip(String label) {
     return Container(
       margin: const EdgeInsets.only(right: 8.0),
       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
       decoration: BoxDecoration(
-        // ---------------- [수정] ----------------
-        color: Colors.grey.shade200, // .shade200으로 변경
+        color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(20.0),
       ),
       child: Text(
@@ -22,23 +26,35 @@ class PostDetailScreen extends StatelessWidget {
     );
   }
 
+  // 날짜 형식 변환 (예: 2025-11-17T10:00:00 -> 2025. 11. 17)
+  String _formatDate(String isoDate) {
+    try {
+      final dateTime = DateTime.parse(isoDate);
+      // 년. 월. 일 형식으로 변경
+      return '${dateTime.year}. ${dateTime.month.toString().padLeft(2, '0')}. ${dateTime.day.toString().padLeft(2, '0')}';
+    } catch (e) {
+      // 파싱 실패 시 원본 반환
+      return isoDate;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // 밝은 테마 색상 설정
     const Color lightBackgroundColor = Colors.white;
     const Color darkTextColor = Colors.black;
-    // ---------------- [수정] ----------------
-    final Color subtleTextColor = Colors.grey.shade600; // .shade600으로 변경
+    final Color subtleTextColor = Colors.grey.shade600;
 
     return Scaffold(
       backgroundColor: lightBackgroundColor,
       appBar: AppBar(
         backgroundColor: lightBackgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: darkTextColor), 
-        title: const Text(
-          '게시글 이름',
-          style: TextStyle(color: darkTextColor, fontWeight: FontWeight.bold),
+        iconTheme: const IconThemeData(color: darkTextColor),
+        title: Text(
+          post.title, // AppBar 제목도 게시글 제목으로
+          style: const TextStyle(
+              color: darkTextColor, fontWeight: FontWeight.bold),
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(
@@ -57,49 +73,53 @@ class PostDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '게시글 제목',
-                style: TextStyle(
+              // 1. 게시글 제목 (모델 데이터 사용)
+              Text(
+                post.title,
+                style: const TextStyle(
                   color: darkTextColor,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 12),
+
+              // 2. 작성자, 날짜 (모델 데이터 사용)
               Row(
                 children: [
+                  // 'author'는 API 응답에 없으므로 '익명'으로 대체
                   Text(
-                    '이신혁',
+                    '익명',
                     style: TextStyle(color: subtleTextColor, fontSize: 14),
                   ),
                   const SizedBox(width: 12),
+                  // 'createdAt' 데이터 사용 및 형식 변환
                   Text(
-                    '2025. 03. 25',
+                    _formatDate(post.createdAt),
                     style: TextStyle(color: subtleTextColor, fontSize: 14),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  _buildTagChip('일상'),
-                  _buildTagChip('행복'),
-                  _buildTagChip('감사'),
-                ],
-              ),
-              const SizedBox(height: 24),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12.0),
-                child: Image.network(
-                  'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%D&auto=format&fit=crop&w=1932&q=80',
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                '오늘 아침에 일어나자마자 창밖을 봤는데, 하늘이 분홍색이랑 주황색으로 물들어 있었어요.\n\n사진으로는 다 담기지 않아서 아쉽지만, 기분 좋은 하루의 시작이었네요 😊\n\n다들 좋은 하루 보내세요!',
-                style: TextStyle(
+
+              // 3. 태그 (API 응답에 없으므로 비워둠)
+              // Row(
+              //   children: [
+              //     _buildTagChip('일상'),
+              //     _buildTagChip('행복'),
+              //     _buildTagChip('감사'),
+              //   ],
+              // ),
+              // const SizedBox(height: 24),
+
+              // 4. 이미지 (API 응답에 없으므로 비워둠)
+              // ClipRRect(...)
+              // const SizedBox(height: 24),
+
+              // 5. 본문 내용 (모델 데이터 사용)
+              Text(
+                post.content,
+                style: const TextStyle(
                   color: darkTextColor,
                   fontSize: 16,
                   height: 1.6,

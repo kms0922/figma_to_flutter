@@ -1,7 +1,7 @@
-// [lib/screens/main_feed_screen.dart]
-
 import 'package:flutter/material.dart';
-import 'package:figma_to_flutter/widgets/post_card.dart'; // 방금 만든 PostCard를 가져옵니다.
+import 'package:figma_to_flutter/data/data_source/remote/board_api.dart';
+import 'package:figma_to_flutter/data/model/board_model.dart';
+import 'package:figma_to_flutter/screens/post_list_screen.dart'; 
 
 class MainFeedScreen extends StatefulWidget {
   const MainFeedScreen({super.key});
@@ -11,85 +11,101 @@ class MainFeedScreen extends StatefulWidget {
 }
 
 class _MainFeedScreenState extends State<MainFeedScreen> {
-  int _selectedIndex = 0; // 하단 탭의 선택된 인덱스
+  int _selectedIndex = 0;
 
-  // --- 테스트를 위한 임시 데이터 ---
-  // 나중에는 이 데이터를 서버나 데이터베이스에서 가져오게 됩니다.
-  final List<Map<String, String?>> posts = [
-    {
-      "title": "게시글 제목",
-      "content": "공지 내용",
-      "imageUrl": null, // 이미지가 없는 게시글
-    },
-    {
-      "title": "게시글 제목",
-      "content": "공지 내용",
-      "imageUrl": null,
-    },
-    {
-      "title": "게시글 제목",
-      "content": "공지 내용",
-      "imageUrl": null,
-    },
-    {
-      "title": "게시글 제목",
-      "content": "공지 내용",
-      "imageUrl": null,
-    },
-    {
-      "title": "게시글 제목",
-      "content": "공지 내용",
-      "imageUrl": null,
-    },
-  ];
-  // --- 임시 데이터 끝 ---
+  // BoardApi 및 Future 변수 선언 (http 사용)
+  late final BoardApi _boardApi;
+  late Future<List<BoardModel>> _boardsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // initState에서 BoardApi 인스턴스 생성 및 API 호출
+    _boardApi = BoardApi();
+    _boardsFuture = _boardApi.getBoards();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-    // TODO: 탭에 따라 다른 동작을 하도록 구현 (예: 화면 이동)
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 화면 배경색을 디자인과 비슷하게 연한 회색으로 설정
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
-        // AppBar 배경색 및 스타일
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black, // 아이콘과 글자색
-        elevation: 0, // 그림자 제거
+        foregroundColor: Colors.black,
+        elevation: 0,
         title: const Text(
-          '나의 게시판 앱', //
+          '나의 게시판 앱',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          // 오른쪽 아이콘 버튼들
           IconButton(
             onPressed: () {},
             icon: const Icon(Icons.search),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.edit_outlined),
-          ),
+          // '새 글 작성' 아이콘은 PostListScreen으로 이동했으므로 여기서는 제거
         ],
       ),
-      body: ListView.builder(
-        itemCount: posts.length, // 데이터 리스트의 길이만큼
-        itemBuilder: (context, index) {
-          // 각 항목에 대해 PostCard 위젯을 반환
-          final post = posts[index];
-          return PostCard(
-            title: post['title']!,
-            content: post['content']!,
-            imageUrl: post['imageUrl'],
+      // body를 FutureBuilder로 변경
+      body: FutureBuilder<List<BoardModel>>(
+        future: _boardsFuture, // http.getBoards() 호출
+        builder: (context, snapshot) {
+          // 로딩 중일 때
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          // 에러 발생 시
+          if (snapshot.hasError) {
+            return Center(child: Text('오류가 발생했습니다: ${snapshot.error}'));
+          }
+          // 데이터가 없을 때
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('게시판이 없습니다.'));
+          }
+
+          // 데이터 로드 성공 시
+          final boards = snapshot.data!;
+
+          // Board 목록을 ListView로 표시
+          return ListView.builder(
+            itemCount: boards.length,
+            itemBuilder: (context, index) {
+              final board = boards[index];
+              return Card(
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                  side: const BorderSide(color: Color(0xFFEEEEEE), width: 1),
+                ),
+                child: ListTile(
+                  title: Text(board.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(board.description),
+                  // 탭하면 PostListScreen으로 boardId와 boardName을 들고 이동
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PostListScreen(
+                          boardId: board.id,
+                          boardName: board.name,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           );
         },
       ),
-      // 하단 네비게이션 바
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -101,18 +117,18 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
             label: '메뉴',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline), // person 아이콘
+            icon: Icon(Icons.person_outline),
             label: '프로필',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.black, // 선택된 아이콘 색상
-        unselectedItemColor: Colors.grey[600], // 선택되지 않은 아이콘 색상
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey[600],
         onTap: _onItemTapped,
-        showSelectedLabels: false,   // 선택된 라벨 숨기기
-        showUnselectedLabels: false, // 선택되지 않은 라벨 숨기기
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
         backgroundColor: Colors.white,
-        elevation: 1.0, // 약간의 그림자
+        elevation: 1.0,
       ),
     );
   }

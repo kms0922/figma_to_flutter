@@ -1,32 +1,25 @@
-// [lib/widgets/post_card.dart]
-
 import 'package:flutter/material.dart';
-// 1. 상세 스크린 import 하기
-import 'package:figma_to_flutter/screens/post_detail_screen.dart'; 
+import 'package:figma_to_flutter/data/model/post_model.dart';
+import 'package:figma_to_flutter/screens/post_detail_screen.dart';
 
 class PostCard extends StatelessWidget {
-  final String title;
-  final String content;
-  final String? imageUrl;
+  // title, content 대신 PostModel을 직접 받음
+  final PostModel post;
 
   const PostCard({
     super.key,
-    required this.title,
-    required this.content,
-    this.imageUrl,
+    required this.post,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 2. InkWell 위젯으로 Card를 감싸서 탭 효과와 이벤트를 추가합니다.
     return InkWell(
-      // 3. 탭(tap) 이벤트 핸들러
       onTap: () {
-        // Navigator.push를 사용해 새 화면으로 이동합니다.
+        // 탭하면 PostDetailScreen으로 PostModel 객체 전달
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const PostDetailScreen(),
+            builder: (context) => PostDetailScreen(post: post),
           ),
         );
       },
@@ -42,32 +35,29 @@ class PostCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (imageUrl != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: Image.network(
-                      imageUrl!,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
+              // API 응답에 imageUrl이 없으므로 해당 로직 제거
+
+              // 1. 게시글 제목 (모델 데이터 사용)
               Text(
-                title,
+                post.title,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
+
+              // 2. 게시글 내용 (모델 데이터 사용)
               Text(
-                content,
+                post.content,
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
                 ),
+                maxLines: 2, // 내용은 2줄까지만 보이도록
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

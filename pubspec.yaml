@@ -1,21 +1,37 @@
+name: figma_to_flutter
+description: "A new Flutter project."
+publish_to: 'none' 
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.9.2 <4.0.0' # pub get 오류 방지를 위해 SDK 버전 명시
+
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
   
+  # 1. Board API용
   http: ^1.2.1
+  
+  # 2. Post API용
   dio: ^5.5.0+1
   retrofit: ^4.1.0
   json_annotation: ^4.9.0
   
+  # 3. JSON 파싱용
   json_serializable: ^6.8.0
-
-  # 이미지 선택을 위한 패키지 추가
-  image_picker: ^1.1.2 # 최신 안정 버전으로 업데이트될 수 있습니다.
+  
+  # 4. image_picker: ^1.1.2 <- 이 줄을 삭제합니다.
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
+  # 5. 코드 생성을 위한 라이브러리
   retrofit_generator: ^8.1.1
   build_runner: ^2.4.11
+
+flutter:
+  uses-material-design: true

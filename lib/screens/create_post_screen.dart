@@ -1,23 +1,38 @@
-import 'dart:io'; // File 클래스를 사용하기 위해 import
+import 'package:dio/dio.dart';
+import 'package:figma_to_flutter/data/data_source/remote/post_api.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; // image_picker 패키지 import
 
 class CreatePostScreen extends StatefulWidget {
-  // 어떤 게시판에 글을 쓸지 결정하는 boardId를 받아옵니다.
-  // 이 화면이 호출되기 전에 MainFeedScreen 또는 PostListScreen에서 boardId를 정해줘야 합니다.
-  final int? boardId; // boardId가 필수가 아니라면 null 허용
+  final int boardId; // 어느 게시판에 글을 쓸지 ID를 받습니다.
 
-  const CreatePostScreen({super.key, this.boardId});
+  const CreatePostScreen({
+    super.key,
+    required this.boardId,
+  });
 
   @override
   State<CreatePostScreen> createState() => _CreatePostScreenState();
 }
 
 class _CreatePostScreenState extends State<CreatePostScreen> {
+  late final PostApi _postApi;
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  final ImagePicker _picker = ImagePicker(); // ImagePicker 인스턴스
-  final List<XFile> _images = []; // 선택된 이미지 파일들을 저장할 리스트
+  bool _isLoading = false;
+
+  // --- 1. 밝은 테마 색상으로 변경 ---
+  final Color _backgroundColor = Colors.white;
+  final Color _textColor = Colors.black;
+  final Color _hintColor = Colors.grey.shade400; // 밝은 힌트 색상
+  final Color _dividerColor = Colors.grey.shade300; // 밝은 구분선 색상
+  final Color _buttonColor = Colors.blue;
+  // --- (변경 끝) ---
+
+  @override
+  void initState() {
+    super.initState();
+    _postApi = PostApi(Dio());
+  }
 
   @override
   void dispose() {
@@ -26,173 +41,123 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     super.dispose();
   }
 
-  // 갤러리에서 이미지 선택
-  Future<void> _pickImage() async {
-    final List<XFile>? selectedImages = await _picker.pickMultiImage(
-      imageQuality: 70, // 이미지 품질 (0-100)
-    );
-    if (selectedImages != null && selectedImages.isNotEmpty) {
-      setState(() {
-        _images.addAll(selectedImages); // 선택된 이미지들을 리스트에 추가
-      });
+  Future<void> _submitPost() async {
+    if (_titleController.text.isEmpty || _contentController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('제목과 내용을 모두 입력해주세요.')),
+      );
+      return;
     }
-  }
 
-  // 이미지 미리보기 삭제
-  void _removeImage(int index) {
     setState(() {
-      _images.removeAt(index);
+      _isLoading = true;
     });
-  }
 
-  // 게시글 작성 (API 연동은 추후에)
-  void _submitPost() {
-    // TODO: 여기에 게시글 데이터와 이미지 파일들을 백엔드 API로 전송하는 로직을 구현합니다.
-    // 현재는 단순히 콘솔에 출력하고 이전 화면으로 돌아갑니다.
-    print('게시글 제목: ${_titleController.text}');
-    print('게시글 내용: ${_contentController.text}');
-    print('첨부된 이미지 수: ${_images.length}');
-    for (var img in _images) {
-      print('이미지 경로: ${img.path}');
+    try {
+      final postData = {
+        "title": _titleController.text,
+        "content": _contentController.text,
+      };
+
+      // API 호출
+      await _postApi.createPost(widget.boardId, postData);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('게시글이 성공적으로 작성되었습니다.')),
+        );
+        Navigator.pop(context, true); // true를 반환하여 이전 화면이 새로고침하도록 함
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류가 발생했습니다: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('게시글 작성 완료 (API 연동 필요)')),
-    );
-    Navigator.pop(context); // 이전 화면으로 돌아가기
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      // 2. 테마 적용
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: _backgroundColor,
         elevation: 0,
-        title: const Text(
+        iconTheme: IconThemeData(color: _textColor), // 뒤로가기 버튼 색상
+        title: Text(
           '게시글 작성',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(color: _textColor, fontWeight: FontWeight.bold),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: TextButton(
-              onPressed: _submitPost, // '다음' 버튼
-              child: const Text(
-                '다음',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+          TextButton(
+            onPressed: _isLoading ? null : _submitPost,
+            child: Text(
+              '다음', // '다음' 버튼
+              style: TextStyle(
+                color: _isLoading ? _hintColor : _buttonColor,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. 제목 입력 필드
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                hintText: '제목을 입력하세요',
-                hintStyle: TextStyle(color: Color(0xFFBDBDBD)),
-                border: InputBorder.none, // 테두리 없음
-                contentPadding: EdgeInsets.zero, // 기본 패딩 제거
-              ),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-              maxLines: null, // 여러 줄 입력 가능
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                // 3. 제목 입력 (스타일 변경)
+                TextField(
+                  controller: _titleController,
+                  autofocus: true,
+                  style: TextStyle(
+                      color: _textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                  decoration: InputDecoration(
+                    hintText: '곧 벚꽃이 필 것 같아요', // 스크린샷 힌트
+                    hintStyle: TextStyle(
+                        color: _hintColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
+                    border: InputBorder.none,
+                  ),
+                ),
+                Divider(color: _dividerColor), // 4. 구분선 색상 변경
+                // 5. 내용 입력 (스타일 변경)
+                Expanded(
+                  child: TextField(
+                    controller: _contentController,
+                    style: TextStyle(color: _textColor, fontSize: 16),
+                    decoration: InputDecoration(
+                      hintText: '아무래도 그렇죠', // 스크린샷 힌트
+                      hintStyle: TextStyle(color: _hintColor, fontSize: 16),
+                      border: InputBorder.none,
+                    ),
+                    maxLines: null, // 무제한 줄
+                    keyboardType: TextInputType.multiline,
+                  ),
+                ),
+                // (이미지 관련 UI는 제거된 상태)
+              ],
             ),
-            const Divider(height: 20, thickness: 1, color: Color(0xFFE0E0E0)), // 구분선
-
-            // 2. 내용 입력 필드
-            TextField(
-              controller: _contentController,
-              decoration: const InputDecoration(
-                hintText: '무슨 일이 있었는지 알려주세요',
-                hintStyle: TextStyle(color: Color(0xFFBDBDBD)),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-              ),
-              style: const TextStyle(fontSize: 16, color: Colors.black87),
-              maxLines: null, // 여러 줄 입력 가능
-              minLines: 5, // 최소 5줄
+          ),
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(child: CircularProgressIndicator()),
             ),
-            const SizedBox(height: 20),
-
-            // 3. 이미지 미리보기 및 추가 버튼
-            SizedBox(
-              height: 100, // 이미지 미리보기 영역 높이 고정
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal, // 가로 스크롤
-                itemCount: _images.length + 1, // 선택된 이미지 수 + '사진 추가' 버튼
-                itemBuilder: (context, index) {
-                  if (index == _images.length) {
-                    // '사진 추가' 버튼
-                    return GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        width: 90,
-                        height: 90,
-                        margin: const EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add_photo_alternate_outlined, size: 30, color: Colors.grey.shade600),
-                            Text('사진 추가', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                    );
-                  } else {
-                    // 선택된 이미지 미리보기
-                    return Stack(
-                      children: [
-                        Container(
-                          width: 90,
-                          height: 90,
-                          margin: const EdgeInsets.only(right: 10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            image: DecorationImage(
-                              image: FileImage(File(_images[index].path)), // FileImage 사용
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        // 삭제 버튼
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: GestureDetector(
-                            onTap: () => _removeImage(index),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(Icons.close, color: Colors.white, size: 20),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
