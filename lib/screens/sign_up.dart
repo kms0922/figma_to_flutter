@@ -14,7 +14,7 @@ class SignUpScreen extends StatelessWidget {
         foregroundColor: Colors.black,
         elevation: 0,
         title: const Text(
-          '회원가입',
+          '회원',
           style: TextStyle(
             fontWeight: FontWeight.bold,
           ),
@@ -32,14 +32,14 @@ class SignUpScreen extends StatelessWidget {
         ],
       ),
       body: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0), // 상하 여백 추가
+        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0), 
         child: Column(
           children: [
             CustomTextField(
               label: '닉네임',
               hintText: '닉네임을 입력하세요.',
             ),
-            SizedBox(height: 24), // 각 입력 필드 사이의 간격
+            SizedBox(height: 24), 
             CustomTextField(
               label: '이메일',
               hintText: '이메일을 입력하세요.',
