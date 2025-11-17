@@ -24,12 +24,12 @@ class _PostApi implements PostApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<List<PostModel>> getPosts(int boardId) async {
+  Future<PostListResponseModel> getPosts(int boardId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<PostModel>>(Options(
+    final _options = _setStreamType<PostListResponseModel>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -45,12 +45,10 @@ class _PostApi implements PostApi {
           _dio.options.baseUrl,
           baseUrl,
         )));
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<PostModel> _value;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PostListResponseModel _value;
     try {
-      _value = _result.data!
-          .map((dynamic i) => PostModel.fromJson(i as Map<String, dynamic>))
-          .toList();
+      _value = PostListResponseModel.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
