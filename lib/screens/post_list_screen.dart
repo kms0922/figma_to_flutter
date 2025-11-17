@@ -1,8 +1,11 @@
+// [lib/screens/post_list_screen.dart]
+
 import 'package:dio/dio.dart';
 import 'package:figma_to_flutter/data/data_source/remote/post_api.dart';
 import 'package:figma_to_flutter/data/model/post_model.dart';
 import 'package:figma_to_flutter/widgets/post_card.dart';
 import 'package:flutter/material.dart';
+// 1. CreatePostScreen import
 import 'package:figma_to_flutter/screens/create_post_screen.dart';
 
 class PostListScreen extends StatefulWidget {
@@ -27,11 +30,11 @@ class _PostListScreenState extends State<PostListScreen> {
   void initState() {
     super.initState();
     _postApi = PostApi(Dio());
-    // API 호출을 별도 함수로 분리
+    // 2. API 호출을 별도 함수로 분리 (새로고침을 위해)
     _loadPosts();
   }
 
-  // API 호출을 별도 함수로 분리 (새로고침을 위해)
+  // 3. API 호출을 별도 함수로 분리
   void _loadPosts() {
     _postsFuture = _postApi.getPosts(widget.boardId);
   }
@@ -45,7 +48,7 @@ class _PostListScreenState extends State<PostListScreen> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
-        // '새 글 작성' 아이콘 추가
+        // 4. '새 글 작성' 아이콘 추가
         actions: [
           IconButton(
             onPressed: () async {
@@ -53,11 +56,12 @@ class _PostListScreenState extends State<PostListScreen> {
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CreatePostScreen(boardId: widget.boardId),
+                  builder: (context) =>
+                      CreatePostScreen(boardId: widget.boardId),
                 ),
               );
 
-              // 글 작성을 완료하고 돌아왔으면(result == true) 목록 새로고침
+              // 5. 글 작성을 완료하고 돌아왔으면(result == true) 목록 새로고침
               if (result == true) {
                 setState(() {
                   _loadPosts();

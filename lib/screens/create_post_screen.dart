@@ -1,3 +1,5 @@
+// [lib/screens/create_post_screen.dart]
+
 import 'package:dio/dio.dart';
 import 'package:figma_to_flutter/data/data_source/remote/post_api.dart';
 import 'package:flutter/material.dart';
@@ -20,13 +22,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _contentController = TextEditingController();
   bool _isLoading = false;
 
-  // --- 1. 밝은 테마 색상으로 변경 ---
+  // --- 밝은 테마 색상 ---
   final Color _backgroundColor = Colors.white;
   final Color _textColor = Colors.black;
   final Color _hintColor = Colors.grey.shade400; // 밝은 힌트 색상
   final Color _dividerColor = Colors.grey.shade300; // 밝은 구분선 색상
   final Color _buttonColor = Colors.blue;
-  // --- (변경 끝) ---
+  // ---
 
   @override
   void initState() {
@@ -59,7 +61,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         "content": _contentController.text,
       };
 
-      // API 호출
+      // API 호출 (이제 post_api.dart에 createPost가 있으므로 정상 작동)
       await _postApi.createPost(widget.boardId, postData);
 
       if (mounted) {
@@ -86,7 +88,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 2. 테마 적용
       backgroundColor: _backgroundColor,
       appBar: AppBar(
         backgroundColor: _backgroundColor,
@@ -116,7 +117,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             padding: const EdgeInsets.all(20.0),
             child: Column(
               children: [
-                // 3. 제목 입력 (스타일 변경)
+                // 제목 입력
                 TextField(
                   controller: _titleController,
                   autofocus: true,
@@ -133,8 +134,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     border: InputBorder.none,
                   ),
                 ),
-                Divider(color: _dividerColor), // 4. 구분선 색상 변경
-                // 5. 내용 입력 (스타일 변경)
+                Divider(color: _dividerColor),
+                // 내용 입력
                 Expanded(
                   child: TextField(
                     controller: _contentController,
@@ -148,7 +149,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     keyboardType: TextInputType.multiline,
                   ),
                 ),
-                // (이미지 관련 UI는 제거된 상태)
               ],
             ),
           ),
