@@ -24,7 +24,7 @@ class _PostApi implements PostApi {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<PostListResponseModel> getPosts(int boardId) async {
+  Future<PostListResponseModel> getPosts(String boardId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -58,7 +58,7 @@ class _PostApi implements PostApi {
 
   @override
   Future<PostModel> createPost(
-    int boardId,
+    String boardId,
     Map<String, dynamic> postData,
   ) async {
     final _extra = <String, dynamic>{};

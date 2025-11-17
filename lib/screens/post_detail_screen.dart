@@ -1,8 +1,10 @@
-import 'package:figma_to_flutter/data/model/post_model.dart';
+// [lib/screens/post_detail_screen.dart]
+
+// 1. 수정된 모델 파일 import
+import 'package:figma_to_flutter/data/model/post_models.dart';
 import 'package:flutter/material.dart';
 
 class PostDetailScreen extends StatelessWidget {
-  // PostModel 객체를 생성자를 통해 받음
   final PostModel post;
 
   const PostDetailScreen({
@@ -10,7 +12,7 @@ class PostDetailScreen extends StatelessWidget {
     required this.post,
   });
 
-  // 태그 UI (API에 없으므로 임시로 헬퍼 함수만 남겨둠)
+  // (태그 헬퍼 함수는 API에 없으므로 일단 남겨둡니다)
   Widget _buildTagChip(String label) {
     return Container(
       margin: const EdgeInsets.only(right: 8.0),
@@ -26,14 +28,11 @@ class PostDetailScreen extends StatelessWidget {
     );
   }
 
-  // 날짜 형식 변환 (예: 2025-11-17T10:00:00 -> 2025. 11. 17)
   String _formatDate(String isoDate) {
     try {
       final dateTime = DateTime.parse(isoDate);
-      // 년. 월. 일 형식으로 변경
       return '${dateTime.year}. ${dateTime.month.toString().padLeft(2, '0')}. ${dateTime.day.toString().padLeft(2, '0')}';
     } catch (e) {
-      // 파싱 실패 시 원본 반환
       return isoDate;
     }
   }
@@ -51,7 +50,7 @@ class PostDetailScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: darkTextColor),
         title: Text(
-          post.title, // AppBar 제목도 게시글 제목으로
+          post.title, // 2. AppBar 제목
           style: const TextStyle(
               color: darkTextColor, fontWeight: FontWeight.bold),
           overflow: TextOverflow.ellipsis,
@@ -73,9 +72,8 @@ class PostDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. 게시글 제목 (모델 데이터 사용)
               Text(
-                post.title,
+                post.title, // 3. 본문 제목
                 style: const TextStyle(
                   color: darkTextColor,
                   fontSize: 24,
@@ -83,42 +81,27 @@ class PostDetailScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-
-              // 2. 작성자, 날짜 (모델 데이터 사용)
               Row(
                 children: [
-                  // 'author'는 API 응답에 없으므로 '익명'으로 대체
+                  // 4. '익명' 대신 post.creator.nickname 사용
                   Text(
-                    '익명',
+                    post.creator.nickname,
                     style: TextStyle(color: subtleTextColor, fontSize: 14),
                   ),
                   const SizedBox(width: 12),
-                  // 'createdAt' 데이터 사용 및 형식 변환
+                  // 5. post.createdAt 사용
                   Text(
                     _formatDate(post.createdAt),
                     style: TextStyle(color: subtleTextColor, fontSize: 14),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              
+              // (API에 태그, 이미지가 없으므로 관련 UI는 주석 처리)
 
-              // 3. 태그 (API 응답에 없으므로 비워둠)
-              // Row(
-              //   children: [
-              //     _buildTagChip('일상'),
-              //     _buildTagChip('행복'),
-              //     _buildTagChip('감사'),
-              //   ],
-              // ),
-              // const SizedBox(height: 24),
-
-              // 4. 이미지 (API 응답에 없으므로 비워둠)
-              // ClipRRect(...)
-              // const SizedBox(height: 24),
-
-              // 5. 본문 내용 (모델 데이터 사용)
               Text(
-                post.content,
+                post.content, // 6. 본문 내용
                 style: const TextStyle(
                   color: darkTextColor,
                   fontSize: 16,

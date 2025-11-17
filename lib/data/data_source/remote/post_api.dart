@@ -2,9 +2,8 @@
 
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
-import 'package:figma_to_flutter/data/model/post_model.dart';
-// 1. 새로 만든 응답 모델 import
-import 'package:figma_to_flutter/data/model/post_list_response_model.dart';
+// 1. 수정된 모델 파일 import
+import 'package:figma_to_flutter/data/model/post_models.dart';
 
 part 'post_api.g.dart';
 
@@ -12,14 +11,15 @@ part 'post_api.g.dart';
 abstract class PostApi {
   factory PostApi(Dio dio, {String baseUrl}) = _PostApi;
 
-  // 2. 반환 타입을 Future<PostListResponseModel>로 수정
+  // 2. 반환 타입을 PostListResponseModel로 수정
+  // 3. boardId 타입을 String으로 수정
   @GET('/boards/{boardId}/posts')
-  Future<PostListResponseModel> getPosts(@Path('boardId') int boardId);
+  Future<PostListResponseModel> getPosts(@Path('boardId') String boardId);
 
-  // 3. 새 게시글 작성 메소드
+  // 4. boardId 타입을 String으로 수정
   @POST('/boards/{boardId}/posts')
   Future<PostModel> createPost(
-    @Path('boardId') int boardId,
+    @Path('boardId') String boardId,
     @Body() Map<String, dynamic> postData,
   );
 }

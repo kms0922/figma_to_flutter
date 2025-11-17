@@ -1,10 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'board_list_response_model.dart';
+part of 'board_models.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
+
+BoardModel _$BoardModelFromJson(Map<String, dynamic> json) => BoardModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String,
+      createdAt: json['createdAt'] as String,
+      updatedAt: json['updatedAt'] as String,
+    );
+
+Map<String, dynamic> _$BoardModelToJson(BoardModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'description': instance.description,
+      'createdAt': instance.createdAt,
+      'updatedAt': instance.updatedAt,
+    };
 
 BoardListResponseModel _$BoardListResponseModelFromJson(
         Map<String, dynamic> json) =>

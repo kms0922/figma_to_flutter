@@ -1,9 +1,11 @@
+// [lib/widgets/post_card.dart]
+
 import 'package:flutter/material.dart';
-import 'package:figma_to_flutter/data/model/post_model.dart';
+// 1. 수정된 모델 파일 import
+import 'package:figma_to_flutter/data/model/post_models.dart';
 import 'package:figma_to_flutter/screens/post_detail_screen.dart';
 
 class PostCard extends StatelessWidget {
-  // title, content 대신 PostModel을 직접 받음
   final PostModel post;
 
   const PostCard({
@@ -15,7 +17,6 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        // 탭하면 PostDetailScreen으로 PostModel 객체 전달
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -35,11 +36,8 @@ class PostCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // API 응답에 imageUrl이 없으므로 해당 로직 제거
-
-              // 1. 게시글 제목 (모델 데이터 사용)
               Text(
-                post.title,
+                post.title, // 모델 데이터 사용
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -48,15 +46,13 @@ class PostCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-
-              // 2. 게시글 내용 (모델 데이터 사용)
               Text(
-                post.content,
+                post.content, // 모델 데이터 사용
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
                 ),
-                maxLines: 2, // 내용은 2줄까지만 보이도록
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],

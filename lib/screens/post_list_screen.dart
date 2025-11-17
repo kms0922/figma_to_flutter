@@ -2,15 +2,15 @@
 
 import 'package:dio/dio.dart';
 import 'package:figma_to_flutter/data/data_source/remote/post_api.dart';
-import 'package:figma_to_flutter/data/model/post_model.dart';
-// 1. 새로 만든 응답 모델 import
-import 'package:figma_to_flutter/data/model/post_list_response_model.dart';
+// 1. 수정된 모델 파일 import
+import 'package:figma_to_flutter/data/model/post_models.dart';
 import 'package:figma_to_flutter/widgets/post_card.dart';
 import 'package:flutter/material.dart';
 import 'package:figma_to_flutter/screens/create_post_screen.dart';
 
 class PostListScreen extends StatefulWidget {
-  final int boardId;
+  // 2. boardId 타입을 String으로 수정
+  final String boardId;
   final String boardName;
 
   const PostListScreen({
@@ -25,7 +25,7 @@ class PostListScreen extends StatefulWidget {
 
 class _PostListScreenState extends State<PostListScreen> {
   late final PostApi _postApi;
-  // 2. Future의 타입을 PostListResponseModel로 수정
+  // 3. Future의 타입을 PostListResponseModel로 수정
   late Future<PostListResponseModel> _postsFuture;
 
   @override
@@ -36,7 +36,7 @@ class _PostListScreenState extends State<PostListScreen> {
   }
 
   void _loadPosts() {
-    // 3. post_api.getPosts()는 이제 PostListResponseModel을 반환
+    // 4. String 타입의 boardId 전달
     _postsFuture = _postApi.getPosts(widget.boardId);
   }
 
@@ -56,6 +56,7 @@ class _PostListScreenState extends State<PostListScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
+                      // 5. String 타입의 boardId 전달
                       CreatePostScreen(boardId: widget.boardId),
                 ),
               );
@@ -69,7 +70,7 @@ class _PostListScreenState extends State<PostListScreen> {
           ),
         ],
       ),
-      // 4. FutureBuilder의 타입도 PostListResponseModel로 수정
+      // 6. FutureBuilder의 타입도 PostListResponseModel로 수정
       body: FutureBuilder<PostListResponseModel>(
         future: _postsFuture,
         builder: (context, snapshot) {
@@ -79,12 +80,12 @@ class _PostListScreenState extends State<PostListScreen> {
           if (snapshot.hasError) {
             return Center(child: Text('오류가 발생했습니다: ${snapshot.error}'));
           }
-          // 5. 스냅샷 데이터에서 data 필드를 추출
+          // 7. 스냅샷 데이터에서 .data 필드를 추출하여 확인
           if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
             return const Center(child: Text('게시글이 없습니다.'));
           }
 
-          // 6. snapshot.data.data (List<PostModel>)를 사용
+          // 8. snapshot.data.data (List<PostModel>)를 사용
           final posts = snapshot.data!.data;
 
           return ListView.builder(

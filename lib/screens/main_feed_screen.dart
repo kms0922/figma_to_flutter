@@ -2,8 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:figma_to_flutter/data/data_source/remote/board_api.dart';
-import 'package:figma_to_flutter/data/model/board_model.dart';
-import 'package:figma_to_flutter/screens/post_list_screen.dart'; 
+// 1. 수정된 모델 파일 import
+import 'package:figma_to_flutter/data/model/board_models.dart';
+import 'package:figma_to_flutter/screens/post_list_screen.dart';
 
 class MainFeedScreen extends StatefulWidget {
   const MainFeedScreen({super.key});
@@ -51,13 +52,12 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
         ],
       ),
       body: FutureBuilder<List<BoardModel>>(
-        future: _boardsFuture, // board_api.getBoards()
+        future: _boardsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            // 수정된 board_api.dart의 상세 오류가 표시됨
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -72,7 +72,6 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
             return const Center(child: Text('게시판이 없습니다.'));
           }
 
-          // 이제 snapshot.data는 List<BoardModel>입니다.
           final boards = snapshot.data!;
 
           return ListView.builder(
@@ -96,6 +95,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => PostListScreen(
+                          // 2. String 타입의 board.id 전달
                           boardId: board.id,
                           boardName: board.name,
                         ),
