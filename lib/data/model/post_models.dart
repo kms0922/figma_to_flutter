@@ -1,10 +1,12 @@
-// [lib/data/model/post_models.dart]
+// [lib/data/model/post_models.dart] (수정)
 
 import 'package:json_annotation/json_annotation.dart';
+// 1. common_models.dart를 import
+import 'package:figma_to_flutter/data/model/common_models.dart';
 
-part 'post_models.g.dart'; // build_runner가 생성할 파일
+part 'post_models.g.dart';
 
-// 1. POST /posts 요청 Body를 위한 모델 (새로 추가)
+// ... (CreatePostRequestModel은 동일하게 유지)
 @JsonSerializable()
 class CreatePostRequestModel {
   final String title;
@@ -23,31 +25,9 @@ class CreatePostRequestModel {
   Map<String, dynamic> toJson() => _$CreatePostRequestModelToJson(this);
 }
 
-// --- 이하 기존 모델 (수정 없음) ---
+// 2. CreatorModel 정의 (여기서 제거)
 
-// 2. CreatorModel (API의 'createdBy' 객체용)
-@JsonSerializable()
-class CreatorModel {
-  final String id;
-  final String email;
-  final String nickname;
-  @JsonKey(name: 'createdAt')
-  final String createdAt;
-
-  CreatorModel({
-    required this.id,
-    required this.email,
-    required this.nickname,
-    required this.createdAt,
-  });
-
-  factory CreatorModel.fromJson(Map<String, dynamic> json) =>
-      _$CreatorModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$CreatorModelToJson(this);
-}
-
-// 3. ImageModel (API의 'images' 리스트 항목용)
+// 3. ImageModel (기존과 동일)
 @JsonSerializable()
 class ImageModel {
   final String image;
@@ -64,40 +44,40 @@ class ImageModel {
   Map<String, dynamic> toJson() => _$ImageModelToJson(this);
 }
 
-// 4. BoardModel_Post (API의 'board' 객체용)
-// (BoardModel과 충돌을 피하기 위해 이름을 유지)
+// 4. BoardModel_Post -> BoardReferenceModel로 이름 변경 (Linter 오류 수정)
 @JsonSerializable()
-class BoardModel_Post {
+class BoardReferenceModel {
   final String id;
   final String title;
   @JsonKey(name: 'createdAt')
   final String createdAt;
-  final CreatorModel creator;
+  final CreatorModel creator; // common_models.dart에서 가져옴
 
-  BoardModel_Post({
+  BoardReferenceModel({
     required this.id,
     required this.title,
     required this.createdAt,
     required this.creator,
   });
 
-  factory BoardModel_Post.fromJson(Map<String, dynamic> json) =>
-      _$BoardModel_PostFromJson(json);
+  factory BoardReferenceModel.fromJson(Map<String, dynamic> json) =>
+      _$BoardReferenceModelFromJson(json);
 
-  Map<String, dynamic> toJson() => _$BoardModel_PostToJson(this);
+  Map<String, dynamic> toJson() => _$BoardReferenceModelToJson(this);
 }
 
-// 5. PostModel (API의 'list' 리스트 항목용)
+// 5. PostModel (수정)
 @JsonSerializable()
 class PostModel {
   final String id;
   final String title;
   final String body;
   final List<String> tags;
-  final BoardModel_Post board;
+  // 5-1. BoardReferenceModel을 사용하도록 수정
+  final BoardReferenceModel board;
   @JsonKey(name: 'createdAt')
   final String createdAt;
-  final CreatorModel createdBy;
+  final CreatorModel createdBy; // common_models.dart에서 가져옴
   final List<ImageModel> images;
 
   PostModel({
@@ -117,7 +97,7 @@ class PostModel {
   Map<String, dynamic> toJson() => _$PostModelToJson(this);
 }
 
-// 6. PostListResponseModel (GET /posts 응답 본문 전체)
+// 6. PostListResponseModel (기존과 동일)
 @JsonSerializable()
 class PostListResponseModel {
   final int count;

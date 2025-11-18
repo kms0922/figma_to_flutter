@@ -73,15 +73,16 @@ class _PostListScreenState extends State<PostListScreen> {
                 final post = posts[index];
                 return PostCard(
                   post: post,
-                  // 1. PostDetailScreen으로 이동하는 onTap 콜백 전달
+                  // 1. PostCard에 onTap 콜백 전달
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        // 2. PostModel 객체 대신 postId와 postTitle 전달
+                        // 2. [오류 수정] PostDetailScreen에
+                        // 'post' 객체가 아닌 'postId'와 'postTitle' 전달
                         builder: (context) => PostDetailScreen(
                           postId: post.id,
-                          postTitle: post.title, // AppBar 제목용
+                          postTitle: post.title,
                         ),
                       ),
                     );
@@ -94,14 +95,12 @@ class _PostListScreenState extends State<PostListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // 3. 새 글 작성 화면으로 이동
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => CreatePostScreen(boardId: widget.boardId),
             ),
           );
-          // 4. 글 작성이 완료되면 (result == true) 목록 새로고침
           if (result == true) {
             setState(() {
               _loadPosts();

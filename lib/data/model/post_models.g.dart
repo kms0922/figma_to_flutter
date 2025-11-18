@@ -22,21 +22,6 @@ Map<String, dynamic> _$CreatePostRequestModelToJson(
       'tags': instance.tags,
     };
 
-CreatorModel _$CreatorModelFromJson(Map<String, dynamic> json) => CreatorModel(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      nickname: json['nickname'] as String,
-      createdAt: json['createdAt'] as String,
-    );
-
-Map<String, dynamic> _$CreatorModelToJson(CreatorModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'email': instance.email,
-      'nickname': instance.nickname,
-      'createdAt': instance.createdAt,
-    };
-
 ImageModel _$ImageModelFromJson(Map<String, dynamic> json) => ImageModel(
       image: json['image'] as String,
       id: json['id'] as String,
@@ -48,15 +33,16 @@ Map<String, dynamic> _$ImageModelToJson(ImageModel instance) =>
       'id': instance.id,
     };
 
-BoardModel_Post _$BoardModel_PostFromJson(Map<String, dynamic> json) =>
-    BoardModel_Post(
+BoardReferenceModel _$BoardReferenceModelFromJson(Map<String, dynamic> json) =>
+    BoardReferenceModel(
       id: json['id'] as String,
       title: json['title'] as String,
       createdAt: json['createdAt'] as String,
       creator: CreatorModel.fromJson(json['creator'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$BoardModel_PostToJson(BoardModel_Post instance) =>
+Map<String, dynamic> _$BoardReferenceModelToJson(
+        BoardReferenceModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
@@ -69,7 +55,8 @@ PostModel _$PostModelFromJson(Map<String, dynamic> json) => PostModel(
       title: json['title'] as String,
       body: json['body'] as String,
       tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
-      board: BoardModel_Post.fromJson(json['board'] as Map<String, dynamic>),
+      board:
+          BoardReferenceModel.fromJson(json['board'] as Map<String, dynamic>),
       createdAt: json['createdAt'] as String,
       createdBy:
           CreatorModel.fromJson(json['createdBy'] as Map<String, dynamic>),
