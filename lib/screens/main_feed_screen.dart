@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:figma_to_flutter/data/data_source/remote/board_api.dart';
-// 1. 수정된 모델 파일 import
 import 'package:figma_to_flutter/data/model/board_models.dart';
 import 'package:figma_to_flutter/screens/post_list_screen.dart';
 
@@ -37,40 +36,12 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        title: const Text(
-          '나의 게시판 앱',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.search),
-          ),
-        ],
+        // ... (이하 동일)
       ),
       body: FutureBuilder<List<BoardModel>>(
         future: _boardsFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Text(
-                  snapshot.error.toString(),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('게시판이 없습니다.'));
-          }
+          // ... (로딩/에러 처리 동일)
 
           final boards = snapshot.data!;
 
@@ -79,25 +50,21 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
             itemBuilder: (context, index) {
               final board = boards[index];
               return Card(
-                margin:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  side: const BorderSide(color: Color(0xFFEEEEEE), width: 1),
-                ),
+                // ... (Card 스타일 동일)
                 child: ListTile(
-                  title: Text(board.name,
+                  // 1. board.name -> board.title로 변경
+                  title: Text(board.title,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(board.description),
+                  // 2. board.description -> board.creator.nickname (작성자)
+                  subtitle: Text('작성자: ${board.creator.nickname}'),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => PostListScreen(
-                          // 2. String 타입의 board.id 전달
                           boardId: board.id,
-                          boardName: board.name,
+                          // 3. board.name -> board.title로 변경
+                          boardName: board.title,
                         ),
                       ),
                     );

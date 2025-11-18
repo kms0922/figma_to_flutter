@@ -8,19 +8,17 @@ part of 'board_models.dart';
 
 BoardModel _$BoardModelFromJson(Map<String, dynamic> json) => BoardModel(
       id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
+      title: json['title'] as String,
+      creator: CreatorModel.fromJson(json['creator'] as Map<String, dynamic>),
       createdAt: json['createdAt'] as String,
-      updatedAt: json['updatedAt'] as String,
     );
 
 Map<String, dynamic> _$BoardModelToJson(BoardModel instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'name': instance.name,
-      'description': instance.description,
+      'title': instance.title,
+      'creator': instance.creator,
       'createdAt': instance.createdAt,
-      'updatedAt': instance.updatedAt,
     };
 
 BoardListResponseModel _$BoardListResponseModelFromJson(
