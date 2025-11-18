@@ -1,15 +1,13 @@
 // [lib/screens/post_list_screen.dart]
 
-import 'package:dio/dio.dart';
-import 'package:figma_to_flutter/data/data_source/remote/post_api.dart';
-// 1. 수정된 모델 파일 import
-import 'package:figma_to_flutter/data/model/post_models.dart';
-import 'package:figma_to_flutter/widgets/post_card.dart';
 import 'package:flutter/material.dart';
+import 'package:figma_to_flutter/data/data_source/remote/post_api.dart';
+import 'package:figma_to_flutter/data/model/post_models.dart';
 import 'package:figma_to_flutter/screens/create_post_screen.dart';
+import 'package:figma_to_flutter/screens/post_detail_screen.dart';
+import 'package:figma_to_flutter/widgets/post_card.dart';
 
 class PostListScreen extends StatefulWidget {
-  // 2. boardId 타입을 String으로 수정
   final String boardId;
   final String boardName;
 
@@ -25,18 +23,16 @@ class PostListScreen extends StatefulWidget {
 
 class _PostListScreenState extends State<PostListScreen> {
   late final PostApi _postApi;
-  // 3. Future의 타입을 PostListResponseModel로 수정
-  late Future<PostListResponseModel> _postsFuture;
+  late Future<List<PostModel>> _postsFuture;
 
   @override
   void initState() {
     super.initState();
-    _postApi = PostApi(Dio());
+    _postApi = PostApi();
     _loadPosts();
   }
 
   void _loadPosts() {
-    // 4. String 타입의 boardId 전달
     _postsFuture = _postApi.getPosts(widget.boardId);
   }
 
@@ -46,32 +42,11 @@ class _PostListScreenState extends State<PostListScreen> {
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
         title: Text(widget.boardName),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: const Color(0xFFF9F9F9),
         elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      // 5. String 타입의 boardId 전달
-                      CreatePostScreen(boardId: widget.boardId),
-                ),
-              );
-              if (result == true) {
-                setState(() {
-                  _loadPosts();
-                });
-              }
-            },
-            icon: const Icon(Icons.edit_outlined),
-          ),
-        ],
+        foregroundColor: Colors.black,
       ),
-      // 6. FutureBuilder의 타입도 PostListResponseModel로 수정
-      body: FutureBuilder<PostListResponseModel>(
+      body: FutureBuilder<List<PostModel>>(
         future: _postsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -80,22 +55,62 @@ class _PostListScreenState extends State<PostListScreen> {
           if (snapshot.hasError) {
             return Center(child: Text('오류가 발생했습니다: ${snapshot.error}'));
           }
-          // 7. 스냅샷 데이터에서 .data 필드를 추출하여 확인
-          if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('게시글이 없습니다.'));
           }
 
-          // 8. snapshot.data.data (List<PostModel>)를 사용
-          final posts = snapshot.data!.data;
+          final posts = snapshot.data!;
 
-          return ListView.builder(
-            itemCount: posts.length,
-            itemBuilder: (context, index) {
-              final post = posts[index];
-              return PostCard(post: post);
+          return RefreshIndicator(
+            onRefresh: () async {
+              setState(() {
+                _loadPosts();
+              });
             },
+            child: ListView.builder(
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                final post = posts[index];
+                return PostCard(
+                  post: post,
+                  // 1. PostDetailScreen으로 이동하는 onTap 콜백 전달
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        // 2. PostModel 객체 대신 postId와 postTitle 전달
+                        builder: (context) => PostDetailScreen(
+                          postId: post.id,
+                          postTitle: post.title, // AppBar 제목용
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // 3. 새 글 작성 화면으로 이동
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CreatePostScreen(boardId: widget.boardId),
+            ),
+          );
+          // 4. 글 작성이 완료되면 (result == true) 목록 새로고침
+          if (result == true) {
+            setState(() {
+              _loadPosts();
+            });
+          }
+        },
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.edit),
       ),
     );
   }
