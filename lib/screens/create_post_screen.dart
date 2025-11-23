@@ -1,15 +1,11 @@
-// [lib/screens/create_post_screen.dart] (수정)
+// [lib/screens/create_post_screen.dart]
 
 import 'package:flutter/material.dart';
 import 'package:figma_to_flutter/data/data_source/remote/post_api.dart';
 
 class CreatePostScreen extends StatefulWidget {
-  final String boardId;
-
-  const CreatePostScreen({
-    super.key,
-    required this.boardId,
-  });
+  // boardId 제거
+  const CreatePostScreen({super.key});
 
   @override
   State<CreatePostScreen> createState() => _CreatePostScreenState();
@@ -18,14 +14,14 @@ class CreatePostScreen extends StatefulWidget {
 class _CreatePostScreenState extends State<CreatePostScreen> {
   late final PostApi _postApi;
   final _titleController = TextEditingController();
-  final _bodyController = TextEditingController(); // content -> body
-  final _tagsController = TextEditingController(); // tags 추가
+  final _bodyController = TextEditingController();
+  final _tagsController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _postApi = PostApi(); // Dio 인스턴스 제거 (post_api.dart에서 자체 생성)
+    _postApi = PostApi();
   }
 
   @override
@@ -37,7 +33,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _submitPost() async {
-    // 1. body(본문) 컨트롤러로 유효성 검사 수정
     if (_titleController.text.isEmpty || _bodyController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('제목과 내용을 모두 입력해주세요.')),
@@ -50,16 +45,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     });
 
     try {
-      // 2. 태그 컨트롤러의 텍스트를 쉼표(,)로 분리하여 List<String> 생성
       final tags = _tagsController.text
           .split(',')
           .map((tag) => tag.trim())
-          .where((tag) => tag.isNotEmpty) // 빈 태그 제거
+          .where((tag) => tag.isNotEmpty)
           .toList();
 
-      // 3. API 명세에 맞게 title, body, tags를 개별 인자로 전달
+      // [수정] boardId 인자 제거
       await _postApi.createPost(
-        widget.boardId,
         _titleController.text,
         _bodyController.text,
         tags,
@@ -88,6 +81,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ... (UI는 기존과 동일)
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -125,7 +119,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const Divider(),
-                  // 4. 본문 컨트롤러 연결
                   TextField(
                     controller: _bodyController,
                     decoration: const InputDecoration(
@@ -135,7 +128,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     maxLines: 10,
                   ),
                   const Divider(),
-                  // 5. 태그 입력 필드 추가
                   TextField(
                     controller: _tagsController,
                     decoration: const InputDecoration(
@@ -148,9 +140,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
           ),
           if (_isLoading)
-            // 6. withOpacity 경고 수정 (오류 4)
             Container(
-              color: Colors.black.withAlpha(77), // 0.3 * 255 = 76.5
+              color: Colors.black.withAlpha(77),
               child: const Center(child: CircularProgressIndicator()),
             ),
         ],

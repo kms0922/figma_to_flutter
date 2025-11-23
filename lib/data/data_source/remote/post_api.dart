@@ -7,13 +7,13 @@ import 'package:figma_to_flutter/data/model/post_models.dart';
 class PostApi {
   static const String _baseUrl = 'https://api.bulletin.newbies.gistory.me';
 
-  // 1. 게시글 목록 가져오기 (GET /boards/{boardId}/posts)
-  Future<List<PostModel>> getPosts(String boardId) async {
+  // 1. [수정] 전체 게시글 목록 가져오기 (GET /posts)
+  // boardId 파라미터 제거
+  Future<List<PostModel>> getPosts() async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/boards/$boardId/posts'),
+      Uri.parse('$_baseUrl/posts'),
     );
 
-    // 공통 오류 처리
     final contentType = response.headers['content-type'];
     if (response.statusCode != 200 ||
         contentType == null ||
@@ -37,8 +37,8 @@ class PostApi {
     }
   }
 
-  // 2. 게시글 상세 가져오기 (GET /posts/{id} - 새로 추가)
-  // (API 명세에 없었지만 상세 화면 구현을 위해 경로를 /posts/{id}로 추정)
+  // 2. 게시글 상세 가져오기 (GET /posts/{id})
+  // (기존 유지)
   Future<PostModel> getPostDetail(String postId) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/posts/$postId'),
@@ -59,18 +59,16 @@ class PostApi {
     try {
       String responseBody = utf8.decode(response.bodyBytes);
       final Map<String, dynamic> jsonData = jsonDecode(responseBody);
-      // 단일 PostModel로 파싱
       return PostModel.fromJson(jsonData);
     } catch (e) {
       throw Exception('JSON 파싱 오류: $e \n응답: ${utf8.decode(response.bodyBytes)}');
     }
   }
 
-  // 3. 게시글 생성하기 (POST /boards/{boardId}/posts - 수정)
-  Future<PostModel> createPost(
-      String boardId, String title, String body, List<String> tags) async {
+  // 3. [수정] 게시글 생성하기 (POST /posts)
+  // boardId 파라미터 제거
+  Future<PostModel> createPost(String title, String body, List<String> tags) async {
     
-    // 4. API 명세에 맞는 요청 모델 생성
     final requestBody = CreatePostRequestModel(
       title: title,
       body: body,
@@ -78,17 +76,14 @@ class PostApi {
     );
 
     final response = await http.post(
-      // 5. boardId를 URL 경로에 포함
-      Uri.parse('$_baseUrl/boards/$boardId/posts'),
+      Uri.parse('$_baseUrl/posts'), // 경로 수정 (/boards/{id}/posts -> /posts)
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      // 6. API 명세에 맞는 body 전송 (CreatePostRequestModel 사용)
       body: jsonEncode(requestBody.toJson()),
     );
 
     final contentType = response.headers['content-type'];
-    // 7. 생성 성공은 201(Created)
     if (response.statusCode != 201 ||
         contentType == null ||
         !contentType.contains('application/json')) {
@@ -103,7 +98,6 @@ class PostApi {
     try {
       String responseBody = utf8.decode(response.bodyBytes);
       final Map<String, dynamic> jsonData = jsonDecode(responseBody);
-      // 8. 응답으로 생성된 PostModel 객체 파싱
       return PostModel.fromJson(jsonData);
     } catch (e) {
       throw Exception('JSON 파싱 오류: $e \n응답: ${utf8.decode(response.bodyBytes)}');
