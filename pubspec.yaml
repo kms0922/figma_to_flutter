@@ -25,6 +25,6 @@ dev_dependencies:
   retrofit_generator: ^8.1.1
   build_runner: ^2.4.11
   json_serializable: ^6.8.0
-
+  image_picker: ^1.0.7
 flutter:
   uses-material-design: true

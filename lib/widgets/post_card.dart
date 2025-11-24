@@ -13,6 +13,24 @@ class PostCard extends StatelessWidget {
     this.onTap,
   });
 
+  // [이미지 URL 처리 함수]
+  // 이미지 주소가 'http'로 시작하지 않으면(상대 경로면) 서버 도메인을 앞에 붙여줍니다.
+  String _getValidImageUrl(String rawUrl) {
+    if (rawUrl.startsWith('http')) {
+      return rawUrl;
+    }
+
+    // 서버 도메인 (API 주소와 동일하게 맞춤)
+    const String baseUrl = 'https://api.bulletin.newbies.gistory.me';
+
+    // URL이 '/'로 시작하는지 여부에 따라 처리
+    if (rawUrl.startsWith('/')) {
+      return '$baseUrl$rawUrl';
+    } else {
+      return '$baseUrl/$rawUrl';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -29,40 +47,46 @@ class PostCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. 이미지 표시 로직 추가
+              // 1. 이미지가 있는지 확인 (리스트가 비어있지 않으면 표시)
               if (post.images.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
                     child: Image.network(
-                      post.images[0].image, // 첫 번째 이미지 URL 사용
-                      height: 180,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      // 이미지 로딩 및 에러 처리
+                      // 첫 번째 이미지의 URL을 가져와서 변환
+                      _getValidImageUrl(post.images[0].image),
+                      height: 180, // 이미지 높이 고정
+                      width: double.infinity, // 너비는 카드에 맞춤
+                      fit: BoxFit.cover, // 꽉 차게 표시
+                      
+                      // 로딩 중일 때 표시할 위젯
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
                         return Container(
                           height: 180,
                           color: Colors.grey[200],
                           child: const Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                         );
                       },
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        height: 180,
-                        color: Colors.grey[200],
-                        child: const Center(
-                            child: Icon(Icons.broken_image, color: Colors.grey)),
-                      ),
+                      
+                      // 이미지 로드 실패 시 표시할 위젯
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 180,
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: Icon(Icons.broken_image, color: Colors.grey),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
-              // 2. 제목
+
+              // 2. 게시글 제목
               Text(
                 post.title,
                 style: const TextStyle(
@@ -73,9 +97,10 @@ class PostCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-              // 3. 본문
+
+              // 3. 게시글 본문
               Text(
-                post.body, 
+                post.body,
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
@@ -84,7 +109,8 @@ class PostCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-              // 4. 작성자 정보
+
+              // 4. 작성자 닉네임
               Text(
                 post.createdBy.nickname,
                 style: const TextStyle(

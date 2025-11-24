@@ -1,10 +1,11 @@
 // [lib/screens/create_post_screen.dart]
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:figma_to_flutter/data/data_source/remote/post_api.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CreatePostScreen extends StatefulWidget {
-  // boardId 제거
   const CreatePostScreen({super.key});
 
   @override
@@ -16,6 +17,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
   final _tagsController = TextEditingController();
+
+  // 이미지 선택을 위한 변수
+  final ImagePicker _picker = ImagePicker();
+  XFile? _selectedImage;
+
   bool _isLoading = false;
 
   @override
@@ -30,6 +36,24 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     _bodyController.dispose();
     _tagsController.dispose();
     super.dispose();
+  }
+
+  // 갤러리에서 이미지 선택
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _selectedImage = image;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('이미지를 불러올 수 없습니다: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _submitPost() async {
@@ -51,12 +75,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           .where((tag) => tag.isNotEmpty)
           .toList();
 
-      // [수정] boardId 인자 제거
-      await _postApi.createPost(
+      // 1. 게시글 생성 API 호출
+      final newPost = await _postApi.createPost(
         _titleController.text,
         _bodyController.text,
         tags,
       );
+
+      // 2. 이미지가 선택되었다면 업로드 API 호출
+      if (_selectedImage != null) {
+        await _postApi.uploadImage(newPost.id, _selectedImage!.path);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -81,7 +110,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ... (UI는 기존과 동일)
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -108,6 +136,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: SingleChildScrollView(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextField(
                     controller: _titleController,
@@ -135,6 +164,42 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       border: InputBorder.none,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  
+                  // 이미지 선택 버튼 및 미리보기 UI
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      width: double.infinity,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: _selectedImage != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                File(_selectedImage!.path),
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_photo_alternate_outlined,
+                                    size: 40, color: Colors.grey[400]),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '사진 추가',
+                                  style: TextStyle(color: Colors.grey[500]),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),

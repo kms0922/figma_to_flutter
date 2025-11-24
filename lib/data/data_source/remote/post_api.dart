@@ -7,8 +7,7 @@ import 'package:figma_to_flutter/data/model/post_models.dart';
 class PostApi {
   static const String _baseUrl = 'https://api.bulletin.newbies.gistory.me';
 
-  // 1. [수정] 전체 게시글 목록 가져오기 (GET /posts)
-  // boardId 파라미터 제거
+  // 1. 전체 게시글 목록 가져오기 (GET /posts)
   Future<List<PostModel>> getPosts() async {
     final response = await http.get(
       Uri.parse('$_baseUrl/posts'),
@@ -18,8 +17,9 @@ class PostApi {
     if (response.statusCode != 200 ||
         contentType == null ||
         !contentType.contains('application/json')) {
-      String bodySnippet =
-          response.body.length > 200 ? '${response.body.substring(0, 200)}...' : response.body;
+      String bodySnippet = response.body.length > 200
+          ? '${response.body.substring(0, 200)}...'
+          : response.body;
       throw Exception('오류: 서버가 JSON이 아닌 응답을 반환했습니다.\n'
           'Status Code: ${response.statusCode}\n'
           'Content-Type: $contentType\n'
@@ -38,7 +38,6 @@ class PostApi {
   }
 
   // 2. 게시글 상세 가져오기 (GET /posts/{id})
-  // (기존 유지)
   Future<PostModel> getPostDetail(String postId) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/posts/$postId'),
@@ -48,8 +47,9 @@ class PostApi {
     if (response.statusCode != 200 ||
         contentType == null ||
         !contentType.contains('application/json')) {
-      String bodySnippet =
-          response.body.length > 200 ? '${response.body.substring(0, 200)}...' : response.body;
+      String bodySnippet = response.body.length > 200
+          ? '${response.body.substring(0, 200)}...'
+          : response.body;
       throw Exception('오류: 서버가 JSON이 아닌 응답을 반환했습니다.\n'
           'Status Code: ${response.statusCode}\n'
           'Content-Type: $contentType\n'
@@ -65,10 +65,9 @@ class PostApi {
     }
   }
 
-  // 3. [수정] 게시글 생성하기 (POST /posts)
-  // boardId 파라미터 제거
-  Future<PostModel> createPost(String title, String body, List<String> tags) async {
-    
+  // 3. 게시글 생성하기 (POST /posts)
+  Future<PostModel> createPost(
+      String title, String body, List<String> tags) async {
     final requestBody = CreatePostRequestModel(
       title: title,
       body: body,
@@ -76,7 +75,7 @@ class PostApi {
     );
 
     final response = await http.post(
-      Uri.parse('$_baseUrl/posts'), // 경로 수정 (/boards/{id}/posts -> /posts)
+      Uri.parse('$_baseUrl/posts'),
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -87,8 +86,9 @@ class PostApi {
     if (response.statusCode != 201 ||
         contentType == null ||
         !contentType.contains('application/json')) {
-      String bodySnippet =
-          response.body.length > 200 ? '${response.body.substring(0, 200)}...' : response.body;
+      String bodySnippet = response.body.length > 200
+          ? '${response.body.substring(0, 200)}...'
+          : response.body;
       throw Exception('오류: 서버가 JSON이 아닌 응답을 반환했습니다.\n'
           'Status Code: ${response.statusCode}\n'
           'Content-Type: $contentType\n'
@@ -101,6 +101,26 @@ class PostApi {
       return PostModel.fromJson(jsonData);
     } catch (e) {
       throw Exception('JSON 파싱 오류: $e \n응답: ${utf8.decode(response.bodyBytes)}');
+    }
+  }
+
+  // 4. 이미지 업로드 (POST /posts/{uuid}/image)
+  Future<void> uploadImage(String postId, String filePath) async {
+    final uri = Uri.parse('$_baseUrl/posts/$postId/image');
+
+    // Multipart 요청 생성
+    var request = http.MultipartRequest('POST', uri);
+
+    // 파일 추가 (Swagger UI 기준 필드명은 'file')
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+    // 요청 전송
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+          '이미지 업로드 실패: ${response.statusCode}\n응답: ${response.body}');
     }
   }
 }
