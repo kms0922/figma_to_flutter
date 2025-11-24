@@ -1,13 +1,11 @@
-// [lib/screens/post_detail_screen.dart]
-
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:figma_to_flutter/data/data_source/remote/post_api.dart';
 import 'package:figma_to_flutter/data/model/post_models.dart';
-// 1. [오류 수정] 'intl' 패키지 import 추가
-import 'package:intl/intl.dart';
 
 class PostDetailScreen extends StatefulWidget {
-  // ... (기존 코드 동일)
   final String postId;
   final String postTitle;
 
@@ -22,7 +20,6 @@ class PostDetailScreen extends StatefulWidget {
 }
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
-  // ... (기존 코드 동일)
   late final PostApi _postApi;
   late Future<PostModel> _postFuture;
 
@@ -36,16 +33,46 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   String _formatDate(String dateString) {
     try {
       final dateTime = DateTime.parse(dateString);
-      // 2. DateFormat이 정상적으로 인식됨
       return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
     } catch (e) {
       return dateString;
     }
   }
 
+  // [이미지 처리 로직 - PostCard와 동일]
+  Widget _buildDetailImage(String imageString) {
+    try {
+      if (imageString.startsWith('http') || imageString.startsWith('/')) {
+        return Image.network(
+          _getValidImageUrl(imageString),
+          fit: BoxFit.cover,
+        );
+      }
+
+      String cleanBase64 = imageString;
+      if (imageString.contains(',')) {
+        cleanBase64 = imageString.split(',').last;
+      }
+      Uint8List decodedBytes = base64Decode(cleanBase64);
+
+      return Image.memory(
+        decodedBytes,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+      );
+    } catch (e) {
+      return const Icon(Icons.error);
+    }
+  }
+
+  String _getValidImageUrl(String rawUrl) {
+    if (rawUrl.startsWith('http')) return rawUrl;
+    const String baseUrl = 'https://api.bulletin.newbies.gistory.me';
+    return rawUrl.startsWith('/') ? '$baseUrl$rawUrl' : '$baseUrl/$rawUrl';
+  }
+
   @override
   Widget build(BuildContext context) {
-    // ... (이하 build 메서드 전체 동일)
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
@@ -61,15 +88,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Text('오류가 발생했습니다: ${snapshot.error}'),
-              ),
-            );
+            return Center(child: Text('오류: ${snapshot.error}'));
           }
           if (!snapshot.hasData) {
-            return const Center(child: Text('게시글 데이터를 불러올 수 없습니다.'));
+            return const Center(child: Text('데이터가 없습니다.'));
           }
 
           final post = snapshot.data!;
@@ -82,81 +104,45 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 children: [
                   Text(
                     post.title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Text(
-                        post.createdBy.nickname,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
+                      Text(post.createdBy.nickname, style: const TextStyle(fontWeight: FontWeight.w500)),
                       const Spacer(),
-                      Text(
-                        _formatDate(post.createdAt),
-                        style: const TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
+                      Text(_formatDate(post.createdAt), style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 16),
+
+                  // 이미지 슬라이더
                   if (post.images.isNotEmpty)
                     SizedBox(
                       height: 250,
                       child: PageView.builder(
                         itemCount: post.images.length,
                         itemBuilder: (context, index) {
-                          final image = post.images[index];
                           return Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 4.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                image.image,
-                                fit: BoxFit.cover,
-                                loadingBuilder: (context, child, progress) {
-                                  if (progress == null) return child;
-                                  return Container(
-                                    color: Colors.grey[200],
-                                    child: const Center(
-                                        child: CircularProgressIndicator()),
-                                  );
-                                },
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color: Colors.grey[200],
-                                  child: const Icon(Icons.error),
-                                ),
-                              ),
+                              child: _buildDetailImage(post.images[index].image),
                             ),
                           );
                         },
                       ),
                     ),
+                  
                   if (post.images.isNotEmpty) const SizedBox(height: 24),
-                  Text(
-                    post.body,
-                    style: const TextStyle(fontSize: 16, height: 1.5),
-                  ),
+                  Text(post.body, style: const TextStyle(fontSize: 16, height: 1.5)),
                   const SizedBox(height: 24),
                   if (post.tags.isNotEmpty)
                     Wrap(
                       spacing: 8.0,
-                      runSpacing: 4.0,
-                      children: post.tags
-                          .map((tag) => Chip(
-                                label: Text('#$tag'),
-                                backgroundColor: Colors.grey[200],
-                                labelStyle: const TextStyle(color: Colors.black),
-                                side: BorderSide.none,
-                              ))
-                          .toList(),
+                      children: post.tags.map((tag) => Chip(label: Text('#$tag'))).toList(),
                     ),
                 ],
               ),
